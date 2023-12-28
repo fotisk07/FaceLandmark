@@ -1,0 +1,9 @@
+annotation/
+helen_1/
+train
+face_landmarks.csv
+__pycache__
+notes.ipynb
+face_landmarks_adj.csv
+helen1_new/
+wandb/
