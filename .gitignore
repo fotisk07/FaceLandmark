@@ -13,3 +13,5 @@ cuda.py
 out.out
 HELEN/
 config.yaml
+Autoencoder/
+*.pth
