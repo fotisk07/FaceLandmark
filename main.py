@@ -9,6 +9,7 @@ from utils import show_predictions
 import matplotlib.pyplot as plt
 import wandb 
 import argparse
+import yaml
 
 
 
@@ -24,15 +25,19 @@ log_wandb = args.wandb
 verbose = args.verbose
 cuda = args.cuda    
 
-lr = 0.001
-batch_size = 128
-csv_file_path = 'face_landmarks_adj.csv'
-root_dir = "helen1_new"
-evaluate_every = 1
-if cuda:
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-else:
-    device = 'cpu'
+# Load config file
+with open("config.yaml", 'r') as stream:
+    config = yaml.safe_load(stream)
+
+
+lr = config["lr"]
+batch_size = config["batch_size"]
+csv_file_path = config["csv_file_path"]
+root_dir = config["root_dir"]
+evaluate_every = config["evaluate_every"]
+
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") if cuda else 'cpu'
 
 
 if __name__ == "__main__":

@@ -2,11 +2,6 @@ import torch
 import torch.nn as nn
 
 
-
-
-
-
-
 class Baseline(nn.Module):
     def __init__(self, num_landmarks):
         super(Baseline, self).__init__()

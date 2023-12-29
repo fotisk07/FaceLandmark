@@ -12,3 +12,4 @@ job.batch
 cuda.py
 out.out
 HELEN/
+config.yaml
