@@ -2,16 +2,20 @@ from tqdm import tqdm
 import torch
 from utils import mask_to_landmarks
 import wandb
-
+import os
 
 class Trainer:
-    def __init__(self, model, optimizer, criterion_mask, criterion_landmark, device, log_wandb=False):
+    def __init__(self, model, optimizer, criterion_mask, criterion_landmark, device, log_wandb=False, save=False,
+                 save_every=None):
         self.model = model
         self.optimizer = optimizer
         self.criterion_mask = criterion_mask
         self.criterion_landmark = criterion_landmark
         self.device = device
         self.wandb = log_wandb
+        self.save = save
+        self.save_every = save_every
+
 
     def train(self, train_dataloader, valid_loader,  epochs, verbose=True, evaluate_every=1):
         self.model.train()
@@ -39,6 +43,9 @@ class Trainer:
             if evaluate_every and e % evaluate_every == 0:
                 mask_valid_loss, landmark_valid_loss = self.evaluate(valid_loader, verbose=verbose)
 
+            if self.save and self.save_every and e % self.save_every == 0:
+                self.save_model(e)
+
             if verbose:
                 print(f"Training Mask Loss: {running_loss/len(train_dataloader):.3f}") 
                 if evaluate_every and e % evaluate_every == 0:                      
@@ -50,11 +57,13 @@ class Trainer:
                            "Landmark Valid Loss: ": landmark_valid_loss})
 
 
+        if self.save:
+            self.save_model(epochs)
+
 
         return {"Mask Train Loss": running_loss/len(train_dataloader),
                 "Mask Valid Loss": mask_valid_loss, 
                 "Landmark Valid Loss": landmark_valid_loss }
-
 
 
     def evaluate(self, valid_dataloader, verbose=True):
@@ -76,6 +85,24 @@ class Trainer:
         
         return mask_loss/len(valid_dataloader), landmarks_loss/len(valid_dataloader)
 
+    def save_model(self, epochs):
+
+        dict = {
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "epochs": epochs,
+        }
+
+        path = f"{self.model.name}/{epochs}.pth" 
+
+        # check if directory exists
+        if not os.path.exists(self.model.name):
+            os.makedirs(self.model.name)
+
+        torch.save(dict, path)
+        print("Model saved successfully")
+
+        
 
 
 

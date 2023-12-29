@@ -35,6 +35,8 @@ batch_size = config["batch_size"]
 csv_file_path = config["csv_file_path"]
 root_dir = config["root_dir"]
 evaluate_every = config["evaluate_every"]
+save_model = config["save_model"]
+save_every = config["save_every"]
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") if cuda else 'cpu'
@@ -56,7 +58,8 @@ if __name__ == "__main__":
     landmark_loss = losses.landmark_loss
     mask_loss = losses.mask_loss
 
-    trainer = Trainer(model, optimizer, mask_loss, landmark_loss, device=device, log_wandb=log_wandb)
+    trainer = Trainer(model, optimizer, mask_loss, landmark_loss, device=device, log_wandb=log_wandb,
+                      save=save_model, save_every=save_every)
 
     trainer.train(train_loader, valid_loader, epochs, verbose=verbose, evaluate_every=evaluate_every)
 

@@ -40,6 +40,7 @@ class Autoencoder(nn.Module):
         # conv 6 (32, 64, 64)
         # conv 7 (16, 128, 128)
         # conv 8 (1, 256, 256)
+        self.name = "Autoencoder"
 
         self.encoder = nn.Sequential(
             nn.Conv2d(3, 16, kernel_size=7, padding="same"),
