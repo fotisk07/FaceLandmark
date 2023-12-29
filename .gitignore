@@ -8,3 +8,7 @@ face_landmarks_adj.csv
 helen1_new/
 wandb/
 env/
+job.batch
+cuda.py
+out.out
+HELEN/

@@ -67,7 +67,7 @@ class Trainer:
             images, landmarks, masks = sample['image'], sample['landmarks'], sample['mask']
             images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
             mask_pred = self.model(images)
-            landmarks_pred = torch.tensor(mask_to_landmarks(mask_pred), dtype=torch.float32)
+            landmarks_pred = torch.tensor(mask_to_landmarks(mask_pred), dtype=torch.float32).to(self.device)
             running_landmarks_loss = self.criterion_landmark(landmarks, landmarks_pred)
             running_mask__loss = self.criterion_mask(masks, mask_pred)
             mask_loss += running_mask__loss.item()
