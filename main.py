@@ -51,7 +51,7 @@ if __name__ == "__main__":
     trans = transforms.Compose([ReduceLandmarks(20), Normalise(), ToTensor()])
     train_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=True,transform=trans)
     valid_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=False,transform=trans)
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
 
     model = Autoencoder(10).to(device)
