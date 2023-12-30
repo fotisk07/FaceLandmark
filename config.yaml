@@ -1,7 +1,0 @@
-csv_file_path : "face_landmarks_adj.csv"
-root_dir : "helen1_new"
-lr : 0.001
-batch_size : 32
-evaluate_every : 1
-save_every : 1
-save_model : True

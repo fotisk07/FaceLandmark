@@ -26,7 +26,7 @@ verbose = args.verbose
 cuda = args.cuda    
 
 # Load config file
-with open("config.yaml", 'r') as stream:
+with open("confiag.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 
@@ -37,6 +37,7 @@ root_dir = config["root_dir"]
 evaluate_every = config["evaluate_every"]
 save_model = config["save_model"]
 save_every = config["save_every"]
+num_workers = config["num_workers"]
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") if cuda else 'cpu'
@@ -50,7 +51,7 @@ if __name__ == "__main__":
     trans = transforms.Compose([ReduceLandmarks(20), Normalise(), ToTensor()])
     train_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=True,transform=trans)
     valid_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=False,transform=trans)
-    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=16)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
 
     model = Autoencoder(10).to(device)
