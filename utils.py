@@ -39,8 +39,6 @@ def show_everything_batch(images, landmarks, masks):
 
 
 
-
-
 def show_predictions(model, dataloader, device):
     model.eval()
     for sample in dataloader:
@@ -56,18 +54,11 @@ def show_predictions(model, dataloader, device):
 
 
     
-def mask_to_landmarks(mask):
-    # mask is (batch, 64, 256, 256)
-    # output is (batch, 10, 2)
-    if torch.is_tensor(mask):
-        mask = mask.detach().cpu()
+def mask_to_landmarks(a):
+    flattened = a.view(a.shape[0], a.shape[1], -1)
 
-    max_indices_flat = np.argmax(mask.reshape(mask.shape[0], mask.shape[1], -1), axis=-1)
+    maxis = torch.argmax(flattened, dim=-1)
 
-    # Convert the flattened indices to 2D indices
-    max_indices_2d = np.column_stack(np.unravel_index(max_indices_flat, (256, 256)))
+    indices = torch.stack((maxis % torch.tensor([a.shape[2]]) , maxis // torch.tensor(a.shape[3])), dim=-1)
 
-    # Reshape to the desired output shape (4, 10, 2)
-    result_tensor = max_indices_2d.reshape(mask.shape[0], mask.shape[1], 2)
-
-    return result_tensor
+    return indices
