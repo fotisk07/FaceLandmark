@@ -26,7 +26,7 @@ verbose = args.verbose
 cuda = args.cuda    
 
 # Load config file
-with open("confiag.yaml", 'r') as stream:
+with open("config.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 
