@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
-from utils import show_image_landmarks, show_image_landmarks_batch, show_masks_batch, show_everything_batch
-
 
 
 class ToTensor(object):
@@ -94,18 +92,3 @@ class FaceLandmarksDataset(Dataset):
         return sample
     
 
-if __name__ == "__main__":
-
-    trans = transforms.Compose([ReduceLandmarks(20), ToTensor()])
-    train_data = FaceLandmarksDataset(csv_file='face_landmarks_adj.csv',root_dir="helen1_new",train=True,transform=trans)
-    train_loader = DataLoader(train_data, batch_size=4, shuffle=True)
-
-    for sample in train_loader:
-        image = sample["image"]
-        landmarks = sample["landmarks"]
-        mask = sample["mask"]
-        show_everything_batch(sample)
-
-        plt.show()
-
-        break

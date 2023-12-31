@@ -1,6 +1,7 @@
 import torch
 from tqdm import tqdm
-from utils import mask_to_landmarks
+from utils import mask_to_landmarks, plot_image_with_landmarks
+import matplotlib.pyplot as plt
 
 
 class Evaluator:
@@ -34,3 +35,41 @@ class Evaluator:
 
         return mask_loss/len(data), landmarks_loss/len(data)
     
+    def create_img_landmarks_graph(self, data, num_images=1, show=True, save=False, save_path=None):
+        """
+        data : dataloader type of certain batch size. 
+        If batch_size > num_images, then the first num_images images will be used.
+        If batch_size < num_images, then the first batch_size images will be used.
+        """
+        self.model.eval()
+        
+        if num_images > len(data):
+            num_images = len(data)
+
+        sample = next(iter(data))
+        images, landmarks, masks = sample['image'][:num_images], sample['landmarks'][:num_images], sample['mask'][:num_images]
+        images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
+        mask_pred = self.model(images)
+        landmarks_pred = mask_to_landmarks(mask_pred).float()
+
+        plt.figure(figsize=(10, 10))
+        
+        for i in range(0, 2 * num_images,2):
+            plt.subplot(num_images, 2, i+1)
+            plot_image_with_landmarks(images[i//2], landmarks[i//2], color='g')
+            plt.axis('off')
+
+            plt.subplot(num_images, 2,  i+2)
+            plot_image_with_landmarks(images[i//2], landmarks_pred[i//2], color='r')
+            plt.axis('off')
+
+        if show:
+            plt.show()
+        
+        if save:
+            plt.savefig(save_path)
+
+        
+
+
+
