@@ -101,7 +101,41 @@ class Evaluator:
             path = f'{save_path}/landmark_comparaison.png'
             plt.savefig(save_path)
 
+    
+    def create_mask_comparaison_graph(self, data, num_landmarks=5 ,num_images=1, show=True, save=False, save_path=None):
+        self.model.eval()
+        sample = next(iter(data))
+
+        if num_images > len(data):
+            num_images = len(data)
+
+        images, landmarks, masks = sample['image'][:num_images], sample['landmarks'][:num_images], sample['mask'][:num_images]
+        images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
+        mask_pred = self.model(images)
+        landmarks_pred = mask_to_landmarks(mask_pred).float()
+
+    
+        for j in range(num_images):
+            fig = plt.figure(figsize=(10, 10))
+            for i in range(0, 3*num_landmarks, 3):
+                plt.subplot(num_landmarks, 3, i+1)
+                plot_image(images[j])
+                plt.plot(landmarks[j, i//3, 0], landmarks[j, i//3,1], marker='o', color='green')
+                plt.plot(landmarks_pred[j, i//3, 0], landmarks_pred[j, i//3,1], marker='o', color='red')
+
+                plt.subplot(num_landmarks, 3, i+2)
+                plot_image(masks[j, i//3])
+
+                plt.subplot(num_landmarks, 3, i+3)
+                plot_image(mask_pred[j, i//3])
             
+
+        if show:
+            plt.show()
+
+        if save:
+            path = f'{save_path}/mask_comparaison.png'
+            plt.savefig(save_path)
 
 
 
