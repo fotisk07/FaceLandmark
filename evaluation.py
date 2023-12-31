@@ -68,6 +68,7 @@ class Evaluator:
             plt.show()
         
         if save:
+            path = f'{save_path}/images_with_landmarks.png'
             plt.savefig(save_path)
 
     def create_landmark_comparaison_graph(self, data, num_landmarks=5 , num_images = 1, show=True, save=False, save_path=None):
