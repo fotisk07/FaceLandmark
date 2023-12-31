@@ -16,7 +16,10 @@ def plot_image_with_landmarks(image, landmarks, blob_s=10, text_size = 6, color 
 
 def plot_image(image):
     if torch.is_tensor(image):
-        image = image.numpy().transpose((1, 2, 0))
+        if len(image.shape) == 2:
+            image = image.detach().numpy()
+        else:
+            image = image.numpy().transpose((1, 2, 0))
     plt.imshow(image)
 
     
