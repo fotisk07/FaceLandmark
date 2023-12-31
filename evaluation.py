@@ -1,7 +1,8 @@
 import torch
 from tqdm import tqdm
-from utils import mask_to_landmarks, plot_image_with_landmarks
+from utils import mask_to_landmarks, plot_image_with_landmarks, plot_image
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Evaluator:
@@ -69,7 +70,38 @@ class Evaluator:
         if save:
             plt.savefig(save_path)
 
-        
+    def create_landmark_comparaison_graph(self, data, num_landmarks=5 , num_images = 1, show=True, save=False, save_path=None):
+        self.model.eval()
+        sample = next(iter(data))
+        images, landmarks, masks = sample['image'][:num_images], sample['landmarks'][:num_images], sample['mask'][:num_images]
+        images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
+        mask_pred = self.model(images)
+        landmarks_pred = mask_to_landmarks(mask_pred).float()
+
+        plt.figure(figsize=(10, 10))
+
+        for j in range(num_images):
+            for i in range(num_landmarks):
+                plt.subplot(num_images,num_landmarks, j*num_landmarks + i+1)
+                plot_image(images[j])
+                plt.plot(landmarks[j, i, 0], landmarks[j, i,1], marker='o', color='green')
+                plt.plot(landmarks_pred[j, i,0], landmarks_pred[j, i,1], marker='o', color='red')
+                plt.title("Landmark {}".format(i+1))
+
+                norm = np.linalg.norm(landmarks[j, i]-landmarks_pred[j, i])  
+                plt.xlabel(f'Difference {norm:.2f}', size=10)
+                plt.xticks([])
+                plt.yticks([])
+
+        if show:
+            plt.show()
+
+        if save:
+            path = f'{save_path}/landmark_comparaison.png'
+            plt.savefig(save_path)
+
+            
+
 
 
 

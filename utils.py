@@ -14,7 +14,10 @@ def plot_image_with_landmarks(image, landmarks, blob_s=10, text_size = 6, color 
     for i in range(landmarks.shape[0]):
         plt.text(landmarks[i,0], landmarks[i,1], str(i+1), size=text_size)
 
-
+def plot_image(image):
+    if torch.is_tensor(image):
+        image = image.numpy().transpose((1, 2, 0))
+    plt.imshow(image)
 
     
 def mask_to_landmarks(a):
