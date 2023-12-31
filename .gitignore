@@ -1,6 +1,5 @@
 annotation/
 helen_1/
-train
 face_landmarks.csv
 __pycache__
 notes.ipynb
@@ -15,3 +14,4 @@ HELEN/
 Autoencoder/
 *.pth
 *.yaml
+test.py
