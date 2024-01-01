@@ -52,7 +52,7 @@ if __name__ == "__main__":
     train_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=True,transform=trans)
     valid_data = FaceLandmarksDataset(csv_file=csv_file_path,root_dir=root_dir,train=False,transform=trans)
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
+    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False, num_workers=num_workers)
 
     model = Autoencoder(10).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
