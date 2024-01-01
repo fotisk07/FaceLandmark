@@ -33,6 +33,7 @@ class Evaluator:
             print("Evaluation done!")
             print(f"Validation Mask loss: {mask_loss:.3f} || Validation Landmark loss: {landmarks_loss:.1f}")
 
+        self.model.train()
 
         return mask_loss/len(data), landmarks_loss/len(data)
     
