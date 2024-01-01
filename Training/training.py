@@ -52,9 +52,9 @@ class Trainer:
                 print(f"Training Mask Loss: {running_loss/len(train_dataloader):.3f}") 
                 print(f"Validation Mask loss: {mask_valid_loss:.3f} || Validation Landmark loss: {landmarks_valid_loss:.1f}")
 
-                if self.wandb:
-                    wandb.log({"Epochs" : e+1, "Mask Valid Loss: ": mask_valid_loss, 
-                               "Landmark Valid Loss: ": landmarks_valid_loss})
+            if self.wandb:
+                wandb.log({"Epochs" : e+1, "Mask Valid Loss: ": mask_valid_loss, 
+                            "Landmark Valid Loss: ": landmarks_valid_loss})
 
             if self.save and self.save_every and e % self.save_every == 0:
                 self.save_model(e)
