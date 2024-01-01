@@ -14,8 +14,7 @@ class Evaluator:
 
     def evaluate(self, data, verbose=False):
         self.model.eval()
-        if verbose:
-            print("Starting evaluation...")
+
 
         mask_loss = 0.0
         landmarks_loss = 0.0
@@ -29,9 +28,6 @@ class Evaluator:
             mask_loss += running_mask__loss.item()
             landmarks_loss += running_landmarks_loss.item()
         
-        if verbose:
-            print("Evaluation done!")
-            print(f"Validation Mask loss: {mask_loss:.3f} || Validation Landmark loss: {landmarks_loss:.1f}")
 
         self.model.train()
 

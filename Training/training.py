@@ -41,18 +41,23 @@ class Trainer:
                 if self.wandb:
                     wandb.log({"Mask Loss": loss.item()})
 
+            if evaluate_every and e % evaluate_every == 0 and self.evaluator:
+                if verbose:
+                    print("Starting evaluation...")
+                mask_valid_loss, landmarks_valid_loss = self.evaluator.evaluate(valid_loader, verbose=verbose)
+                if verbose:
+                    print("Evaluation finished")
+                    
             if verbose:
                 print(f"Training Mask Loss: {running_loss/len(train_dataloader):.3f}") 
+                print(f"Validation Mask loss: {mask_valid_loss:.3f} || Validation Landmark loss: {landmarks_valid_loss:.1f}")
 
-            if evaluate_every and e % evaluate_every == 0 and self.evaluator:
-                mask_valid_loss, landmark_valid_loss = self.evaluator.evaluate(valid_loader, verbose=verbose)
                 if self.wandb:
                     wandb.log({"Epochs" : e+1, "Mask Valid Loss: ": mask_valid_loss, 
-                               "Landmark Valid Loss: ": landmark_valid_loss})
+                               "Landmark Valid Loss: ": landmarks_valid_loss})
 
             if self.save and self.save_every and e % self.save_every == 0:
                 self.save_model(e)
-
 
 
         if self.save:
