@@ -22,7 +22,7 @@ class Evaluator:
             images, landmarks, masks = sample['image'], sample['landmarks'], sample['mask']
             images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
             mask_pred = self.model(images)
-            landmarks_pred = mask_to_landmarks(mask_pred).float()
+            landmarks_pred = mask_to_landmarks(mask_pred, self.device).float()
             running_landmarks_loss = self.criterion_landmark(landmarks, landmarks_pred)
             running_mask__loss = self.criterion_mask(masks, mask_pred)
             mask_loss += running_mask__loss.item()
@@ -48,7 +48,7 @@ class Evaluator:
         images, landmarks, masks = sample['image'][:num_images], sample['landmarks'][:num_images], sample['mask'][:num_images]
         images, landmarks , masks = images.to(self.device), landmarks.to(self.device), masks.to(self.device)
         mask_pred = self.model(images)
-        landmarks_pred = mask_to_landmarks(mask_pred).float()
+        landmarks_pred = mask_to_landmarks(mask_pred, self.device).float()
 
         plt.figure(figsize=(10, 10))
         
