@@ -23,11 +23,11 @@ def plot_image(image):
     plt.imshow(image)
 
     
-def mask_to_landmarks(a):
+def mask_to_landmarks(a, device='cpu'):
     flattened = a.view(a.shape[0], a.shape[1], -1)
 
     maxis = torch.argmax(flattened, dim=-1)
 
-    indices = torch.stack((maxis % torch.tensor([a.shape[2]]) , maxis // torch.tensor(a.shape[3])), dim=-1)
+    indices = torch.stack((maxis % torch.tensor([a.shape[2]]).to(device) , maxis // torch.tensor(a.shape[3]).to(device)), dim=-1)
 
     return indices
