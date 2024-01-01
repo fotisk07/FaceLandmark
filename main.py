@@ -5,11 +5,11 @@ from models import Baseline, Autoencoder
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import torch
-from utils import show_predictions
 import matplotlib.pyplot as plt
 import wandb 
 import argparse
 import yaml
+import evaluation
 
 
 
@@ -58,9 +58,10 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     landmark_loss = losses.landmark_loss
     mask_loss = losses.mask_loss
+    evaluator = evaluation.Evaluator(model, mask_loss, landmark_loss, device=device)
 
     trainer = Trainer(model, optimizer, mask_loss, landmark_loss, device=device, log_wandb=log_wandb,
-                      save=save_model, save_every=save_every)
+                      save=save_model, save_every=save_every, evaluator=evaluator)
 
     trainer.train(train_loader, valid_loader, epochs, verbose=verbose, evaluate_every=evaluate_every)
 
