@@ -1,7 +1,7 @@
 from dataset import FaceLandmarksDataset, ReduceLandmarks, ToTensor, Normalise
 from Training.training import Trainer
 from Training import losses
-from models import Baseline, Autoencoder
+from models import Baseline, Autoencoder, Hourglass
 from torch.utils.data import DataLoader
 from torchvision import transforms
 import torch
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False)
 
-    model = Autoencoder(10).to(device)
+    model = Hourglass(10).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     landmark_loss = losses.landmark_loss
     mask_loss = losses.mask_loss
