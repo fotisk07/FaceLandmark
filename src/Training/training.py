@@ -1,6 +1,6 @@
 from tqdm import tqdm 
 import torch
-from utils import mask_to_landmarks
+from src.utils import mask_to_landmarks
 import wandb
 import os
 
@@ -47,21 +47,22 @@ class Trainer:
                 mask_valid_loss, landmarks_valid_loss = self.evaluator.evaluate(valid_loader, verbose=verbose)
                 if verbose:
                     print("Evaluation finished")
+                    print(f"Validation Mask loss: {mask_valid_loss:.3f} || Validation Landmark loss: {landmarks_valid_loss:.1f}")
                     
             if verbose:
                 print(f"Training Mask Loss: {running_loss/len(train_dataloader):.3f}") 
-                print(f"Validation Mask loss: {mask_valid_loss:.3f} || Validation Landmark loss: {landmarks_valid_loss:.1f}")
+                
 
             if self.wandb:
                 wandb.log({"Epochs" : e+1, "Mask Valid Loss: ": mask_valid_loss, 
                             "Landmark Valid Loss: ": landmarks_valid_loss})
 
             if self.save and self.save_every and e % self.save_every == 0:
-                self.save_model(e)
+                self.save_model(e+1)
 
 
         if self.save:
-            self.save_model(epochs)
+            self.save_model(epochs, extra_name="final")
 
 
         return {"Mask Train Loss": running_loss/len(train_dataloader),
@@ -70,19 +71,27 @@ class Trainer:
 
 
 
-    def save_model(self, epochs):
+    def save_model(self, epochs, extra_name=""):
 
         dict = {
             "model_state_dict": self.model.state_dict(),
             "optimizer_state_dict": self.optimizer.state_dict(),
             "epochs": epochs,
         }
-
-        path = f"{self.model.name}/{epochs}.pth" 
+        
+        path = f"model_weights/{self.model.name}"
 
         # check if directory exists
-        if not os.path.exists(self.model.name):
-            os.makedirs(self.model.name)
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+            
+        if extra_name:
+            path += f"/{epochs}_{extra_name}.pth"
+        else:   
+            path += f"/{epochs}.pth"
+
+
 
         torch.save(dict, path)
         print("Model saved successfully")

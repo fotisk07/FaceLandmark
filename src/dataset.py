@@ -92,3 +92,30 @@ class FaceLandmarksDataset(Dataset):
         return sample
     
 
+
+def create_data(csv_file, root_dir, batch_size=32, num_workers=1,validate=False,
+                transform=None, reduce_landmarks=20, only_valid=False):
+    
+    if not transform:
+        trans = transforms.Compose([ReduceLandmarks(reduce_landmarks), Normalise(), ToTensor()])
+
+
+    train_data = FaceLandmarksDataset(csv_file=csv_file,root_dir=root_dir,train=True,
+                                      transform=trans)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, 
+                              num_workers=num_workers)
+
+    valid_data = FaceLandmarksDataset(csv_file=csv_file,root_dir=root_dir,train=False,
+                                    transform=trans)
+
+    valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=False,
+                              num_workers=num_workers)
+
+    if only_valid:
+        valid_loader = DataLoader(valid_data, batch_size=batch_size, shuffle=True,
+                              num_workers=num_workers)
+        train_loader = None
+    
+
+    return train_loader, valid_loader
+

@@ -1,6 +1,6 @@
 import torch
 from tqdm import tqdm
-from utils import mask_to_landmarks, plot_image_with_landmarks, plot_image
+from src.utils import mask_to_landmarks, plot_image_with_landmarks, plot_image
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -66,7 +66,8 @@ class Evaluator:
         
         if save:
             path = f'{save_path}/images_with_landmarks.png'
-            plt.savefig(save_path)
+            plt.savefig(path)
+            plt.close()
 
     def create_landmark_comparaison_graph(self, data, num_landmarks=5 , num_images = 1, show=True, save=False, save_path=None):
         self.model.eval()
@@ -96,7 +97,8 @@ class Evaluator:
 
         if save:
             path = f'{save_path}/landmark_comparaison.png'
-            plt.savefig(save_path)
+            plt.savefig(path)
+            plt.close()
 
     
     def create_mask_comparaison_graph(self, data, num_landmarks=5 ,num_images=1, show=True, save=False, save_path=None):
@@ -132,7 +134,8 @@ class Evaluator:
 
         if save:
             path = f'{save_path}/mask_comparaison.png'
-            plt.savefig(save_path)
+            plt.savefig(path)
+            plt.close()
 
 
 

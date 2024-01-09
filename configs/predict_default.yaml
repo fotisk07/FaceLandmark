@@ -1,0 +1,3 @@
+predict : True
+model_dir : "model_weights/Baseline/1.pth"
+save_figures_path : "graphs"

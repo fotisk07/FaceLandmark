@@ -1,0 +1,23 @@
+wandb : False
+cuda : True
+csv_file_path : "data/face_landmarks.csv"
+root_dir : "data/images/"
+train: False
+predict : False
+
+
+#train
+epochs : nul
+verbose : nul
+lr : nul
+batch_size : 4
+evaluate_every : nul
+save_model : nul
+save_every : nul
+num_workers : 1
+
+#predict
+model_dir : nul
+save_figures_path : nul
+
+
