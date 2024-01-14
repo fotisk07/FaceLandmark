@@ -10,9 +10,6 @@ from cliconfig import make_config
 
 
 
-
-
-
 if __name__ == "__main__":
     config = make_config("configs/default.yaml").dict
 
@@ -38,7 +35,7 @@ if __name__ == "__main__":
 
     train_loader, valid_loader = create_data(csv_file_path, root_dir, batch_size, num_workers)
 
-    model = Baseline(10)
+    model = Baseline(10, name = config["model_name"], gen = config["model_gen"]).to(device)
     landmark_loss = losses.landmark_loss
     mask_loss = losses.mask_loss
     evaluator = evaluation.Evaluator(model, mask_loss, landmark_loss, device=device)
@@ -47,7 +44,7 @@ if __name__ == "__main__":
     if config["train"]:
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
         trainer = Trainer(model, optimizer, mask_loss, landmark_loss, device=device, 
-                    log_wandb=log_wandb,save=save_model, save_every=save_every, 
+                    log_wandb=log_wandb, save=save_model, save_every=save_every, 
                     evaluator=evaluator)
 
         trainer.train(train_loader, valid_loader, 

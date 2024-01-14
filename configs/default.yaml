@@ -4,6 +4,8 @@ csv_file_path : "data/face_landmarks.csv"
 root_dir : "data/images/"
 train: False
 predict : False
+model_name : "Baseline"
+model_gen : 1
 
 
 #train
@@ -11,9 +13,9 @@ epochs : nul
 verbose : nul
 lr : nul
 batch_size : 4
-evaluate_every : nul
-save_model : nul
-save_every : nul
+evaluate_every : False
+save_model : False
+save_every : False
 num_workers : 1
 
 #predict

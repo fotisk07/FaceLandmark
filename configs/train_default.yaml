@@ -11,7 +11,7 @@ csv_file_path : "data/face_landmarks.csv"
 root_dir : "data/images/"
 evaluate_every : 1
 save_model : True
-save_every : 1
+save_every : False  
 num_workers : 1
 predict : False
 

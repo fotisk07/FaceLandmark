@@ -58,11 +58,11 @@ class Trainer:
                             "Landmark Valid Loss: ": landmarks_valid_loss})
 
             if self.save and self.save_every and e % self.save_every == 0:
-                self.save_model(e+1)
+                self.model.save_model(e+1)
 
 
         if self.save:
-            self.save_model(epochs, extra_name="final")
+            self.model.save_model(epochs)
 
 
         return {"Mask Train Loss": running_loss/len(train_dataloader),
@@ -71,31 +71,7 @@ class Trainer:
 
 
 
-    def save_model(self, epochs, extra_name=""):
-
-        dict = {
-            "model_state_dict": self.model.state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "epochs": epochs,
-        }
-        
-        path = f"model_weights/{self.model.name}"
-
-        # check if directory exists
-        if not os.path.exists(path):
-            os.makedirs(path)
-
-            
-        if extra_name:
-            path += f"/{epochs}_{extra_name}.pth"
-        else:   
-            path += f"/{epochs}.pth"
-
-
-
-        torch.save(dict, path)
-        print("Model saved successfully")
-
+    
         
 
 
