@@ -1,69 +1,71 @@
-from src.dataset import create_data
-from src.Training.training import Trainer
-from src.Training import losses
-from src.models.baseline import Baseline
 import torch
-import wandb 
-import src.Training.evaluation as evaluation
-from src.Training.evaluation import Evaluator
-from cliconfig import make_config
+import torchvision.transforms.v2 as v2
 
+from src.dataset import FaceDataset
+from src.models import Baseline
+
+xml_file_train = "data/dlib_faces_5points/train_cleaned.xml"
+xml_file_test = "data/dlib_faces_5points/test_cleaned.xml"
+root_dir = "data"
+batch_size = 1
+input_size = 3 * 256 * 256
+lr = 4e-3
+epochs = 1
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def main():
+    @torch.no_grad()
+    def eval_model():
+        model.eval()
+        total_loss = 0
+        for sample in val_loader:
+            output, loss = model(sample["image"], sample["bbox"])
+            total_loss += loss.item()
+
+        return total_loss / len(val_loader)
+
+    transform = v2.Compose(
+        [
+            v2.Resize((256, 256)),
+            v2.ToImage(),
+            v2.ToDtype(torch.float, scale=True),
+        ]
+    )
+    train_dataset = FaceDataset(
+        xml_file=xml_file_train, root_dir=root_dir, transform=transform
+    )
+    val_dataset = FaceDataset(
+        xml_file=xml_file_train, root_dir=root_dir, transform=transform
+    )
+
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size)
+
+    model = Baseline(input_size=input_size).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+    for epoch in range(epochs):
+        val_loss = eval_model()
+        print(f"Starting training, val loss : {val_loss:4f}")
+
+        total_train_loss = 0
+        for step, sample in enumerate(train_loader):
+            optimizer.zero_grad()
+            output, loss = model(sample["image"].to(device), sample["bbox"].to(device))
+            total_train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+            if step % 100 == 0:
+                print(f"Epoch {epoch:2d} |Step {step:4d} | Loss : {loss.item():.3f}")
+
+        val_loss = eval_model()
+        train_loss = total_train_loss / len(train_loader)
+        print(f"----- Finished Epoch {epoch+1} --------")
+        print(f"Train loss : {train_loss:4f} | Val loss: {val_loss:4f}")
+        print("----------------------------------------")
 
 
 if __name__ == "__main__":
-    config = make_config("configs/default.yaml").dict
-
-    lr = config["lr"]
-    batch_size = config["batch_size"]
-    csv_file_path = config["csv_file_path"]
-    root_dir = config["root_dir"]
-    evaluate_every = config["evaluate_every"]
-    save_model = config["save_model"]
-    save_every = config["save_every"]
-    num_workers = config["num_workers"]
-    epochs = config["epochs"]
-    verbose = config["verbose"]
-    log_wandb = config["wandb"]
-    cuda = config["cuda"]
-
-
-
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") if cuda else 'cpu'
-
-    if log_wandb:
-        run = wandb.init(project="Face-Landmarks")
-
-    train_loader, valid_loader = create_data(csv_file_path, root_dir, batch_size, num_workers)
-
-    model = Baseline(10, name = config["model_name"], gen = config["model_gen"]).to(device)
-    landmark_loss = losses.landmark_loss
-    mask_loss = losses.mask_loss
-    evaluator = evaluation.Evaluator(model, mask_loss, landmark_loss, device=device)
-
-
-    if config["train"]:
-        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-        trainer = Trainer(model, optimizer, mask_loss, landmark_loss, device=device, 
-                    log_wandb=log_wandb, save=save_model, save_every=save_every, 
-                    evaluator=evaluator)
-
-        trainer.train(train_loader, valid_loader, 
-                        epochs, verbose=verbose, 
-                        evaluate_every=evaluate_every)
-
-    if config["predict"]:
-        print("Predicting")
-
-        _,valid_loader = create_data(csv_file_path, root_dir, batch_size, num_workers, 
-                                     only_valid=True)
-        model_dict = torch.load(config["model_dir"], map_location=torch.device('cpu'))
-        model.load_state_dict(model_dict['model_state_dict'])
-        model.eval()
-
-        save_figures_path = config["save_figures_path"]
-        evaluator.create_img_landmarks_graph(valid_loader, num_images=4, show=False,
-                                              save=True, save_path=save_figures_path)
-        evaluator.create_landmark_comparaison_graph(valid_loader, num_images=4, show=False,
-                                                     save=True, save_path=save_figures_path)
-        evaluator.create_mask_comparaison_graph(valid_loader, num_images=4, show=False, save=True,
-                                                 save_path=save_figures_path)
+    main()
