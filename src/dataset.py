@@ -49,18 +49,31 @@ class FaceDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         sample = self.data[idx]
-        image = tv.io.decode_image(sample["img_path"])
-        bbox = tv_tensors.BoundingBoxes(
-            sample["bbox"], canvas_size=image.shape[-2::], format="XYXY"
-        )
+        image = tv.io.read_image(
+            sample["img_path"]
+        )  # Use read_image instead of decode_image
+        face_box = torch.tensor(sample["bbox"], dtype=torch.float32).unsqueeze(
+            0
+        )  # Shape: (1, 4)
+
         keypoints = torch.tensor(
             list(sample["keypoints"].values()), dtype=torch.float32
+        )  # Shape: (5, 2)
+
+        # Convert keypoints to (x, y, x, y) format with zero width/height
+        keypoint_boxes = torch.cat([keypoints, keypoints], dim=1)  # Shape: (5, 4)
+
+        # Stack face box and keypoints into one BoundingBoxes object
+        all_boxes = torch.cat([face_box, keypoint_boxes], dim=0)  # Shape: (6, 4)
+
+        bbox = tv_tensors.BoundingBoxes(
+            all_boxes, canvas_size=image.shape[-2:], format="XYXY"
         )
 
         if self.transform:
-            image = self.transform(image)
+            image, bbox = self.transform(image, bbox)
 
-        return {"image": image, "bbox": bbox, "keypoints": keypoints}
+        return {"image": image, "bbox": bbox}
 
 
 def visualize_sample(sample):
@@ -71,17 +84,21 @@ def visualize_sample(sample):
     # Convert image to numpy for visualization
     image_np = np.array(image)
 
-    # Draw bounding box
-    bbox = sample["bbox"][0].tolist()
+    # Bounding boxes (first one is face, rest are keypoints)
+    bbox = sample["bbox"]
+    face_box = bbox[0].tolist()  # First bbox is the face
+    keypoints = bbox[1:].numpy()[:, :2]  # Extract (x, y) for keypoints
 
-    # Plotting the image and bounding box
+    # Plot image
     fig, ax = plt.subplots()
     ax.imshow(image_np)
+
+    # Draw face bounding box
     ax.add_patch(
         plt.Rectangle(
-            (bbox[0], bbox[1]),
-            bbox[2] - bbox[0],
-            bbox[3] - bbox[1],
+            (face_box[0], face_box[1]),
+            face_box[2] - face_box[0],
+            face_box[3] - face_box[1],
             linewidth=2,
             edgecolor="red",
             facecolor="none",
@@ -89,8 +106,7 @@ def visualize_sample(sample):
     )
 
     # Draw keypoints
-    for point in sample["keypoints"].tolist():
-        ax.plot(point[0], point[1], "bo")  # Blue circles for keypoints
+    ax.scatter(keypoints[:, 0], keypoints[:, 1], c="blue", marker="o")  # Blue circles
 
     ax.axis("off")
     return fig, ax
