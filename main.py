@@ -14,7 +14,7 @@ epochs = 1
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-
+print(f"Using {device}")
 def main():
     @torch.no_grad()
     def eval_model():
