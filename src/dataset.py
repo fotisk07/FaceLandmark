@@ -110,3 +110,54 @@ def visualize_sample(sample):
 
     ax.axis("off")
     return fig, ax
+
+
+def visualize_predictions(sample, model_output):
+    image = sample["image"]
+    if isinstance(image, torch.Tensor):
+        image = tv.ToPILImage()(image)
+
+    image_np = np.array(image)
+
+    # Extract bounding box and keypoints
+    bbox = sample["bbox"]
+    face_box = bbox[0].tolist()
+    gt_keypoints = bbox[1:].numpy()[:, :2]  # Ground truth keypoints
+
+    pred_keypoints = model_output.numpy()[:, :2]  # Predicted keypoints
+
+    # Plot image
+    fig, ax = plt.subplots()
+    ax.imshow(image_np)
+
+    # Draw face bounding box
+    ax.add_patch(
+        plt.Rectangle(
+            (face_box[0], face_box[1]),
+            face_box[2] - face_box[0],
+            face_box[3] - face_box[1],
+            linewidth=2,
+            edgecolor="red",
+            facecolor="none",
+        )
+    )
+
+    # Plot keypoints
+    ax.scatter(
+        gt_keypoints[:, 0],
+        gt_keypoints[:, 1],
+        c="blue",
+        marker="o",
+        label="Ground Truth",
+    )
+    ax.scatter(
+        pred_keypoints[:, 0],
+        pred_keypoints[:, 1],
+        c="green",
+        marker="x",
+        label="Predicted",
+    )
+
+    ax.legend()
+    ax.axis("off")
+    return fig, ax

@@ -2,7 +2,7 @@ import torch
 import torchvision.transforms.v2 as v2
 from tqdm import tqdm
 
-from src.dataset import FaceDataset
+from src.dataset import FaceDataset, visualize_sample, visualize_predictions
 from src.models import Baseline
 
 xml_file_train = "data/dlib_faces_5points/train_cleaned.xml"
@@ -16,6 +16,8 @@ epochs = 1
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 print(f"Using {device}")
+
+
 def main():
     @torch.no_grad()
     def eval_model():
@@ -42,7 +44,9 @@ def main():
         xml_file=xml_file_train, root_dir=root_dir, transform=transform
     )
 
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size)
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset, batch_size=batch_size, shuffle=True
+    )
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size)
 
     model = Baseline(input_size=input_size).to(device)
@@ -51,7 +55,7 @@ def main():
     for epoch in range(epochs):
         val_loss = eval_model()
         print(f"Starting training, val loss : {val_loss:4f}")
-        total_steps  = len(train_loader)
+        total_steps = len(train_loader)
         total_train_loss = 0
         for step, sample in enumerate(train_loader):
             optimizer.zero_grad()
@@ -60,14 +64,19 @@ def main():
             loss.backward()
             optimizer.step()
             if step % 100 == 0:
-                print(f"Epoch {epoch:02d} | Step {step:04d}/{total_steps} | Loss: {loss.item():.3f}")
-
+                print(
+                    f"Epoch {epoch:02d} | Step {step:04d}/{total_steps} | Loss: {loss.item():.3f}"
+                )
 
         val_loss = eval_model()
         train_loss = total_train_loss / len(train_loader)
         print(f"----- Finished Epoch {epoch+1} --------")
-        print(f"Train loss : {train_loss:4f} | Val loss: {val_loss:4f}")
+        print(f"Train loss : {train_loss:.3f} | Val loss: {val_loss:.3f}")
         print("----------------------------------------")
+
+    sample = next(iter(val_loader))
+    keypoints, loss = model(sample)
+    fig, ax = visualize_predictions(sample, keypoints[0])
 
 
 if __name__ == "__main__":
