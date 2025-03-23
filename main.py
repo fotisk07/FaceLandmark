@@ -1,5 +1,6 @@
 import torch
 import torchvision.transforms.v2 as v2
+from tqdm import tqdm
 
 from src.dataset import FaceDataset
 from src.models import Baseline
@@ -7,7 +8,7 @@ from src.models import Baseline
 xml_file_train = "data/dlib_faces_5points/train_cleaned.xml"
 xml_file_test = "data/dlib_faces_5points/test_cleaned.xml"
 root_dir = "data"
-batch_size = 1
+batch_size = 32
 input_size = 3 * 256 * 256
 lr = 4e-3
 epochs = 1
@@ -20,8 +21,9 @@ def main():
     def eval_model():
         model.eval()
         total_loss = 0
-        for sample in val_loader:
-            output, loss = model(sample["image"], sample["bbox"])
+        for sample in tqdm(val_loader):
+            image, targets = sample["image"].to(device), sample["bbox"].to(device)
+            output, loss = model(image, targets)
             total_loss += loss.item()
 
         return total_loss / len(val_loader)
@@ -49,7 +51,7 @@ def main():
     for epoch in range(epochs):
         val_loss = eval_model()
         print(f"Starting training, val loss : {val_loss:4f}")
-
+        total_steps  = len(train_loader)
         total_train_loss = 0
         for step, sample in enumerate(train_loader):
             optimizer.zero_grad()
@@ -58,7 +60,8 @@ def main():
             loss.backward()
             optimizer.step()
             if step % 100 == 0:
-                print(f"Epoch {epoch:2d} |Step {step:4d} | Loss : {loss.item():.3f}")
+                print(f"Epoch {epoch:02d} | Step {step:04d}/{total_steps} | Loss: {loss.item():.3f}")
+
 
         val_loss = eval_model()
         train_loss = total_train_loss / len(train_loader)
