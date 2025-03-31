@@ -8,7 +8,14 @@
   - Starting training, val loss : 16392
   - Train loss : 69505 | Val loss: 35463 after 1 epoch ...
 - Check up the MLP is doing smth : Done
-- Scale the model, is the loss decreasing ? Add convolutions : TODO
+- Scale the model, is the loss decreasing ? Add convolutions : Done
+
+Right now we are at 40 loss
+
+Last steps : 
+- Save model if good
+- Show some visuals
+- Improve the config a bit
 
 ## Advanced
 
