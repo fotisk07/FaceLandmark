@@ -1,4 +1,9 @@
+import torch
+import numpy as np
 import torch.nn as nn
+
+tensor = torch.Tensor
+array = np.ndarray
 
 
 class Baseline(nn.Module):
@@ -8,7 +13,7 @@ class Baseline(nn.Module):
 
         self.loss = nn.MSELoss()
 
-    def forward(self, image, targets=None):
+    def forward(self, image, targets=None) -> tuple[tensor, tensor]:
         image = image.flatten(1)
         output = self.fn1(image)  # (B, 14)
 
@@ -19,3 +24,17 @@ class Baseline(nn.Module):
             loss = self.loss(keypoints, targets[:, 1:, :2])
 
         return keypoints, loss
+
+    def generate(self, input: tensor | dict) -> array:
+        image = input
+        if isinstance(input, dict):
+            if not "image" in input:
+                raise KeyError
+            image = input["image"]
+
+        if len(image.shape) == 3:
+            image = image.unsqueeze(0)
+
+        keypoints, _ = self(image)
+
+        return keypoints.detach().cpu().numpy()

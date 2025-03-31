@@ -6,6 +6,9 @@ from torchvision import tv_tensors
 import matplotlib.pyplot as plt
 import numpy as np
 
+tensor = torch.Tensor
+array = np.ndarray
+
 
 class FaceDataset(torch.utils.data.Dataset):
     def __init__(self, xml_file, root_dir, transform=None):
@@ -112,23 +115,33 @@ def visualize_sample(sample):
     return fig, ax
 
 
-def visualize_predictions(sample, model_output):
-    image = sample["image"]
-    if isinstance(image, torch.Tensor):
-        image = tv.ToPILImage()(image)
+def visualize_predictions(
+    image: torch.Tensor, gt_keypoints: torch.Tensor, pred_keypoints: torch.Tensor | list
+):
+    # Unbatch if batch
+    if len(image.shape) == 4:
+        image = image[0]
+    if len(gt_keypoints.shape) == 3:
+        gt_keypoints = gt_keypoints[0]
+    if len(pred_keypoints.shape) == 3:
+        pred_keypoints = pred_keypoints[0]
 
-    image_np = np.array(image)
+    image = image.permute(1, 2, 0).detach().cpu().numpy()
 
     # Extract bounding box and keypoints
-    bbox = sample["bbox"]
-    face_box = bbox[0].tolist()
-    gt_keypoints = bbox[1:].numpy()[:, :2]  # Ground truth keypoints
+    face_box = gt_keypoints[0].tolist()
+    gt_keypoints = (
+        gt_keypoints[1:].detach().cpu().numpy()[:, :2]
+    )  # Ground truth keypoints
 
-    pred_keypoints = model_output.numpy()[:, :2]  # Predicted keypoints
+    if isinstance(pred_keypoints, torch.Tensor):
+        pred_keypoints = (
+            pred_keypoints.detach().cpu().numpy()[:, :2]
+        )  # Predicted keypoints
 
     # Plot image
     fig, ax = plt.subplots()
-    ax.imshow(image_np)
+    ax.imshow(image)
 
     # Draw face bounding box
     ax.add_patch(
@@ -142,21 +155,16 @@ def visualize_predictions(sample, model_output):
         )
     )
 
-    # Plot keypoints
-    ax.scatter(
-        gt_keypoints[:, 0],
-        gt_keypoints[:, 1],
-        c="blue",
-        marker="o",
-        label="Ground Truth",
-    )
-    ax.scatter(
-        pred_keypoints[:, 0],
-        pred_keypoints[:, 1],
-        c="green",
-        marker="x",
-        label="Predicted",
-    )
+    # Plot keypoints with numbers
+    for i, (gt, pred) in enumerate(zip(gt_keypoints, pred_keypoints)):
+        ax.scatter(
+            gt[0], gt[1], c="blue", marker="o", label="Ground Truth" if i == 0 else ""
+        )
+        ax.scatter(
+            pred[0], pred[1], c="green", marker="x", label="Predicted" if i == 0 else ""
+        )
+        ax.text(gt[0], gt[1], str(i), color="blue", fontsize=8, fontweight="bold")
+        ax.text(pred[0], pred[1], str(i), color="green", fontsize=8, fontweight="bold")
 
     ax.legend()
     ax.axis("off")
