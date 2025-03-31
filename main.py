@@ -10,7 +10,6 @@ from src.models import Model, model_dict
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device}")
 
-hydra_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
 
 
 @torch.no_grad()
@@ -49,12 +48,14 @@ def eval_model(model: torch.nn.Module, dataloaders: tuple, eval_iters: int) -> d
 
 
 def save(model: Model, epoch: int):
-    path = hydra_dir / "models" / f"epoch_{epoch}"
-    path.mkdir(parents=True, exist_ok=True)
+    hydra_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+    dir = hydra_dir / "models" 
+    dir.mkdir(parents=True, exist_ok=True)
+    path = dir / f"epoch_{epoch}.pt"
     torch.save(
         {
             "model": model.state_dict(),
-            "epoch": epoch,
+            "epoch": epoch+1,
         },
         path,
     )
@@ -115,7 +116,7 @@ def main(cfg: DictConfig):
         if eval_loss <= min(eval_losses_per_epoch):
             save(model, epoch)
 
-        print(f"----- Finished Epoch {epoch+1} --------")
+        print(f"--------- Finished Epoch {epoch+1} ---------------")
         print(f"Train Loss: {train_loss:.3f} | Val Loss: {eval_loss:.3f}")
         print("----------------------------------------")
 
