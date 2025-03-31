@@ -47,6 +47,9 @@ def eval_model(model: torch.nn.Module, dataloaders: tuple, eval_iters: int) -> d
 
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig):
+    g = torch.Generator().manual_seed(cfg.seed)
+    torch.manual_seed(cfg.seed)
+
     transform = v2.Compose(
         [
             v2.Resize((256, 256)),
@@ -60,6 +63,7 @@ def main(cfg: DictConfig):
         ),
         batch_size=cfg.batch_size,
         shuffle=True,
+        generator=g,
     )
     val_loader = torch.utils.data.DataLoader(
         FaceDataset(
@@ -67,6 +71,7 @@ def main(cfg: DictConfig):
         ),
         batch_size=cfg.batch_size,
         shuffle=True,
+        generator=g,
     )
 
     model = Baseline(input_size=cfg.input_size).to(device)

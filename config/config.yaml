@@ -6,3 +6,4 @@ input_size : 196608 # 3 * 256 * 256
 eval_iters : 10
 lr : 4e-3
 epochs : 1
+seed : 42
