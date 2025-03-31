@@ -16,9 +16,10 @@ Last steps :
 
 - Save model if good : OK
 - Show some visuals : OK
-- Improve the config a bit
+- Improve the config a bit : OK
 
 ## Advanced
 
+- More transforms : TODO
 - Crop faces for less sparsity : TODO
 - Better input/output with masks : TODO

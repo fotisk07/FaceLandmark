@@ -1,0 +1,3 @@
+_target_: src.dataset.FaceDataset
+xml_file : data/dlib_faces_5points/train_cleaned.xml
+root_dir : data

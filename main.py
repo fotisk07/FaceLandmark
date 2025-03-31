@@ -6,8 +6,7 @@ from omegaconf import DictConfig
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.dataset import FaceDataset
-from src.models import Model, model_dict
+from src.models import Model
 from src.visuals import visualize_grid
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -76,24 +75,23 @@ def main(cfg: DictConfig):
             v2.ToDtype(torch.float, scale=True),
         ]
     )
+    train_dataset = hydra.utils.instantiate(cfg.train_data, transform=transform)
+    val_dataset = hydra.utils.instantiate(cfg.val_data, transform=transform)
+
     train_loader = torch.utils.data.DataLoader(
-        FaceDataset(
-            xml_file=cfg.xml_file_train, root_dir=cfg.root_dir, transform=transform
-        ),
+        train_dataset,
         batch_size=cfg.batch_size,
         shuffle=True,
         generator=g,
     )
     val_loader = torch.utils.data.DataLoader(
-        FaceDataset(
-            xml_file=cfg.xml_file_test, root_dir=cfg.root_dir, transform=transform
-        ),
+        val_dataset,
         batch_size=cfg.batch_size,
         shuffle=True,
         generator=g,
     )
 
-    model: Model = model_dict[cfg.model](input_size=cfg.input_size).to(device)
+    model: Model = hydra.utils.instantiate(cfg.model).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
     print("Started Training")
@@ -123,13 +121,14 @@ def main(cfg: DictConfig):
         print(f"Train Loss: {train_loss:.3f} | Val Loss: {eval_loss:.3f}")
         print("----------------------------------------")
 
-    idxs = np.random.choice(len(val_loader.dataset), cfg.num_visuals)
-    samples = [val_loader.dataset[i] for i in idxs]
-    pred_keypoints = model.generate(
-        torch.stack([sample["image"] for sample in samples]).to(device)
-    )
-    fig, ax = visualize_grid(samples, pred_keypoints, cols=cfg.cols)
-    plt.savefig("test.png")
+    if cfg.sample:
+        idxs = np.random.choice(len(val_loader.dataset), cfg.num_visuals)
+        samples = [val_loader.dataset[i] for i in idxs]
+        pred_keypoints = model.generate(
+            torch.stack([sample["image"] for sample in samples]).to(device)
+        )
+        fig, ax = visualize_grid(samples, pred_keypoints, cols=cfg.cols)
+        plt.savefig("test.png")
 
 
 if __name__ == "__main__":

@@ -117,10 +117,3 @@ class Convolution(Model):
             loss = self.loss(keypoints, targets[:, 1:, :2])
 
         return keypoints, loss
-
-
-model_dict = {
-    "baseline": Baseline,
-    "scaled_baseline": ScaledBaseline,
-    "convolution": Convolution,
-}
