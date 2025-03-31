@@ -12,6 +12,7 @@ personal*
 __pycache__/
 *.py[cod]
 *$py.class
+outputs
 
 # C extensions
 *.so

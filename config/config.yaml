@@ -1,0 +1,8 @@
+xml_file_train : data/dlib_faces_5points/train_cleaned.xml
+xml_file_test : data/dlib_faces_5points/test_cleaned.xml
+root_dir : data
+batch_size : 32
+input_size : 196608 # 3 * 256 * 256
+eval_iters : 10
+lr : 4e-3
+epochs : 1

@@ -1,20 +1,12 @@
 import torch
 import torchvision.transforms.v2 as v2
+import hydra
+from omegaconf import DictConfig
 
 from src.dataset import FaceDataset
 from src.models import Baseline
 
-xml_file_train = "data/dlib_faces_5points/train_cleaned.xml"
-xml_file_test = "data/dlib_faces_5points/test_cleaned.xml"
-root_dir = "data"
-batch_size = 32
-input_size = 3 * 256 * 256
-eval_iters = 10
-lr = 4e-3
-epochs = 1
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 print(f"Using {device}")
 
 
@@ -53,7 +45,8 @@ def eval_model(model: torch.nn.Module, dataloaders: tuple, eval_iters: int) -> d
     return avrg_loss
 
 
-def main():
+@hydra.main(version_base=None, config_path="config", config_name="config")
+def main(cfg: DictConfig):
     transform = v2.Compose(
         [
             v2.Resize((256, 256)),
@@ -62,20 +55,24 @@ def main():
         ]
     )
     train_loader = torch.utils.data.DataLoader(
-        FaceDataset(xml_file=xml_file_train, root_dir=root_dir, transform=transform),
-        batch_size=batch_size,
+        FaceDataset(
+            xml_file=cfg.xml_file_train, root_dir=cfg.root_dir, transform=transform
+        ),
+        batch_size=cfg.batch_size,
         shuffle=True,
     )
     val_loader = torch.utils.data.DataLoader(
-        FaceDataset(xml_file=xml_file_test, root_dir=root_dir, transform=transform),
-        batch_size=batch_size,
+        FaceDataset(
+            xml_file=cfg.xml_file_test, root_dir=cfg.root_dir, transform=transform
+        ),
+        batch_size=cfg.batch_size,
         shuffle=True,
     )
 
-    model = Baseline(input_size=input_size).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    model = Baseline(input_size=cfg.input_size).to(device)
+    optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
-    for epoch in range(epochs):
+    for epoch in range(cfg.epochs):
         print("Started Training")
 
         total_steps = len(train_loader)
@@ -85,10 +82,10 @@ def main():
             loss.backward()
             optimizer.step()
             if step % 100 == 0:
-                avg_loss = eval_model(model, (train_loader, val_loader), eval_iters)
+                avg_loss = eval_model(model, (train_loader, val_loader), cfg.eval_iters)
                 train_loss, eval_loss = avg_loss["train"], avg_loss["val"]
                 print(
-                    f"Epoch {epoch:02d} | Step {step:04d}/{total_steps} | ù"
+                    f"Epoch {epoch:02d} | Step {step:04d}/{total_steps} | "
                     f"Train Loss: {train_loss:.3f} | Val Loss: {eval_loss:.3f}"
                 )
 
