@@ -14,8 +14,8 @@ Right now we are at 40 loss
 
 Last steps :
 
-- Save model if good
-- Show some visuals
+- Save model if good : OK
+- Show some visuals : OK
 - Improve the config a bit
 
 ## Advanced

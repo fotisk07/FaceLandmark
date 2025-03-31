@@ -8,3 +8,5 @@ eval_iters : 10
 lr : 4e-3
 epochs : 1
 seed : 42
+num_visuals : 8
+cols : 3

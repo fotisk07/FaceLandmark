@@ -3,13 +3,15 @@ import torchvision.transforms.v2 as v2
 import hydra
 from pathlib import Path
 from omegaconf import DictConfig
+import numpy as np
+import matplotlib.pyplot as plt
 
 from src.dataset import FaceDataset
 from src.models import Model, model_dict
+from src.visuals import visualize_grid
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device}")
-
 
 
 @torch.no_grad()
@@ -49,13 +51,13 @@ def eval_model(model: torch.nn.Module, dataloaders: tuple, eval_iters: int) -> d
 
 def save(model: Model, epoch: int):
     hydra_dir = Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
-    dir = hydra_dir / "models" 
+    dir = hydra_dir / "models"
     dir.mkdir(parents=True, exist_ok=True)
     path = dir / f"epoch_{epoch}.pt"
     torch.save(
         {
             "model": model.state_dict(),
-            "epoch": epoch+1,
+            "epoch": epoch + 1,
         },
         path,
     )
@@ -65,6 +67,7 @@ def save(model: Model, epoch: int):
 def main(cfg: DictConfig):
     g = torch.Generator().manual_seed(cfg.seed)
     torch.manual_seed(cfg.seed)
+    np.random.seed(cfg.seed)
 
     transform = v2.Compose(
         [
@@ -119,6 +122,14 @@ def main(cfg: DictConfig):
         print(f"--------- Finished Epoch {epoch+1} ---------------")
         print(f"Train Loss: {train_loss:.3f} | Val Loss: {eval_loss:.3f}")
         print("----------------------------------------")
+
+    idxs = np.random.choice(len(val_loader.dataset), cfg.num_visuals)
+    samples = [val_loader.dataset[i] for i in idxs]
+    pred_keypoints = model.generate(
+        torch.stack([sample["image"] for sample in samples]).to(device)
+    )
+    fig, ax = visualize_grid(samples, pred_keypoints, cols=cfg.cols)
+    plt.savefig("test.png")
 
 
 if __name__ == "__main__":
