@@ -1,3 +1,4 @@
+model : convolution
 xml_file_train : data/dlib_faces_5points/train_cleaned.xml
 xml_file_test : data/dlib_faces_5points/test_cleaned.xml
 root_dir : data

@@ -4,7 +4,7 @@ import hydra
 from omegaconf import DictConfig
 
 from src.dataset import FaceDataset
-from src.models import Baseline
+from src.models import Model, model_dict
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using {device}")
@@ -74,12 +74,11 @@ def main(cfg: DictConfig):
         generator=g,
     )
 
-    model = Baseline(input_size=cfg.input_size).to(device)
+    model: Model = model_dict[cfg.model](input_size=cfg.input_size).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
+    print("Started Training")
     for epoch in range(cfg.epochs):
-        print("Started Training")
-
         total_steps = len(train_loader)
         for step, sample in enumerate(train_loader):
             optimizer.zero_grad()
