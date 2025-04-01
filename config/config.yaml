@@ -3,6 +3,7 @@ defaults:
 - model : baseline
 - train_data : default
 - val_data : default
+- transf : base
 
 seed : 42
 

@@ -3,14 +3,44 @@ import xml.etree.ElementTree as ET
 import torch
 import torchvision as tv
 from torchvision import tv_tensors
+import torchvision.transforms.v2 as v2
 import numpy as np
 
 tensor = torch.Tensor
 array = np.ndarray
 
 
+class BaseTransform:
+    def __init__(self):
+        self.transform = v2.Compose(
+            [
+                v2.Resize((256, 256)),
+                v2.ToImage(),
+                v2.ToDtype(torch.float, scale=True),
+            ]
+        )
+
+    def __call__(self, img, bbox):
+        return self.transform(img, bbox)
+
+
+class AdvancedTransform(BaseTransform):
+    def __init__(self, p_hflip, p_distort, scale_distort):
+        self.transform = v2.Compose(
+            [
+                v2.Resize((256, 256)),
+                v2.ToImage(),
+                v2.ToDtype(torch.float, scale=True),
+                v2.RandomHorizontalFlip(p_hflip),
+                v2.ColorJitter(),
+                v2.GaussianNoise(),
+                v2.RandomPerspective(distortion_scale=scale_distort, p=p_distort),
+            ]
+        )
+
+
 class FaceDataset(torch.utils.data.Dataset):
-    def __init__(self, xml_file, root_dir, transform=None):
+    def __init__(self, xml_file, root_dir, transform=BaseTransform()):
         self.root_dir = root_dir
         self.transform = transform
         self.data = self.parse_xml(xml_file)

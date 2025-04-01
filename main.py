@@ -1,5 +1,4 @@
 import torch
-import torchvision.transforms.v2 as v2
 import hydra
 from pathlib import Path
 from omegaconf import DictConfig
@@ -68,15 +67,9 @@ def main(cfg: DictConfig):
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
 
-    transform = v2.Compose(
-        [
-            v2.Resize((256, 256)),
-            v2.ToImage(),
-            v2.ToDtype(torch.float, scale=True),
-        ]
-    )
+    transform = hydra.utils.instantiate(cfg.transf)
     train_dataset = hydra.utils.instantiate(cfg.train_data, transform=transform)
-    val_dataset = hydra.utils.instantiate(cfg.val_data, transform=transform)
+    val_dataset = hydra.utils.instantiate(cfg.val_data)
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
@@ -128,7 +121,10 @@ def main(cfg: DictConfig):
             torch.stack([sample["image"] for sample in samples]).to(device)
         )
         fig, ax = visualize_grid(samples, pred_keypoints, cols=cfg.cols)
-        plt.savefig("test.png")
+        plt.savefig(
+            Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+            / "test.png"
+        )
 
 
 if __name__ == "__main__":

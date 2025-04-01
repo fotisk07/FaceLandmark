@@ -1,0 +1,4 @@
+_target_ : src.dataset.AdvancedTransform
+p_hflip: 0.8
+p_distort : 0.7
+scale_distort: 0.5
