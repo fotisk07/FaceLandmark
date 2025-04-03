@@ -20,6 +20,6 @@ Last steps :
 
 ## Advanced
 
-- More transforms : TODO
+- More transforms : OK Should check performance increase
 - Crop faces for less sparsity : TODO
 - Better input/output with masks : TODO

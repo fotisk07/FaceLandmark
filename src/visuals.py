@@ -73,3 +73,44 @@ def plot_image_with_predictions(ax, sample: dict | tensor, pred_keypoints: array
 
     ax.axis("off")
     ax.legend()
+
+
+def visualize_sample(sample: dict):
+    image = sample["image"]
+    if isinstance(image, torch.Tensor):
+        image = tv.transforms.ToPILImage()(image)
+    image_np = np.array(image)
+    bbox = sample["bbox"]
+    face_box = bbox[0].tolist()
+    gt_keypoints = bbox[1:].numpy()[:, :2]
+
+    fix, ax = plt.subplots()
+    ax.imshow(image_np)
+
+    # Draw face bounding box
+    ax.add_patch(
+        plt.Rectangle(
+            (face_box[0], face_box[1]),
+            face_box[2] - face_box[0],
+            face_box[3] - face_box[1],
+            linewidth=2,
+            edgecolor="red",
+            facecolor="none",
+        )
+    )
+
+    # Plot ground truth keypoints
+    ax.scatter(
+        gt_keypoints[:, 0],
+        gt_keypoints[:, 1],
+        c="blue",
+        marker="o",
+        label="Ground Truth",
+    )
+
+    # Add keypoint numbers
+    for i, gt in enumerate(gt_keypoints):
+        ax.text(gt[0], gt[1], str(i), color="blue", fontsize=8, fontweight="bold")
+
+    ax.axis("off")
+    ax.legend()
