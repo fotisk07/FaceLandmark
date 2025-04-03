@@ -4,6 +4,7 @@ import torch
 import torchvision as tv
 from torchvision import tv_tensors
 import torchvision.transforms.v2 as v2
+import torchvision.transforms.functional as F
 import numpy as np
 
 tensor = torch.Tensor
@@ -11,10 +12,10 @@ array = np.ndarray
 
 
 class BaseTransform:
-    def __init__(self):
+    def __init__(self, size: tuple = (256, 256)):
         self.transform = v2.Compose(
             [
-                v2.Resize((256, 256)),
+                v2.Resize(size),
                 v2.ToImage(),
                 v2.ToDtype(torch.float, scale=True),
             ]
@@ -25,16 +26,103 @@ class BaseTransform:
 
 
 class AdvancedTransform(BaseTransform):
-    def __init__(self, p_hflip, p_distort, scale_distort):
+    def __init__(
+        self,
+        size,
+        p_hflip=0.5,
+        p_distort=0.5,
+        scale_distort=0.7,
+        mean=0,
+        sigma=0.1,
+        brightness=0,
+        saturation=0,
+        contrast=0,
+        hue=0,
+    ):
         self.transform = v2.Compose(
             [
-                v2.Resize((256, 256)),
-                v2.ToImage(),
-                v2.ToDtype(torch.float, scale=True),
+                BaseTransform(size),
                 v2.RandomHorizontalFlip(p_hflip),
-                v2.ColorJitter(),
-                v2.GaussianNoise(),
+                v2.ColorJitter(
+                    brightness=brightness,
+                    saturation=saturation,
+                    contrast=contrast,
+                    hue=hue,
+                ),
+                v2.GaussianNoise(mean=mean, sigma=sigma),
                 v2.RandomPerspective(distortion_scale=scale_distort, p=p_distort),
+            ]
+        )
+
+
+class FaceCrop(BaseTransform):
+    def __init__(self, padding: float = 0):
+        super().__init__()
+        self.padding = padding
+
+    def __call__(self, img, box):
+        img, bbox = super().__call__(img, box)
+
+        # Extract first bounding box for cropping
+        x1, y1, x2, y2 = bbox[0].tolist()[:4]
+
+        # Add padding around the face
+        padding_x = (x2 - x1) * self.padding  # padding
+        padding_y = (y2 - y1) * self.padding  # padding
+
+        # Compute new bounding box with padding
+        x1 = max(0, x1 - padding_x)
+        y1 = max(0, y1 - padding_y)
+        x2 = min(img.shape[2], x2 + padding_x)
+        y2 = min(img.shape[1], y2 + padding_y)
+
+        # Crop the image to the padded bounding box
+        cropped_img = F.crop(img, int(y1), int(x1), int(y2 - y1), int(x2 - x1))
+
+        # Resize cropped image back to original size
+        img = F.resize(cropped_img, (img.shape[1], img.shape[2]))
+
+        # Adjust remaining bounding boxes to match resized image
+        scale_x = img.shape[2] / (x2 - x1)
+        scale_y = img.shape[1] / (y2 - y1)
+        bbox[:, 0] = (bbox[:, 0] - x1) * scale_x
+        bbox[:, 1] = (bbox[:, 1] - y1) * scale_y
+        bbox[:, 2] = (bbox[:, 2] - x1) * scale_x
+        bbox[:, 3] = (bbox[:, 3] - y1) * scale_y
+
+        return img, bbox
+
+
+class AdvancedFace(BaseTransform):
+    def __init__(
+        self,
+        size=(256, 256),
+        p_hflip=0.5,
+        p_distort=0.5,
+        scale_distort=0.7,
+        mean=0,
+        sigma=0.1,
+        brightness=0,
+        saturation=0,
+        contrast=0,
+        hue=0,
+        padding=0,
+    ):
+        self.transform = v2.Compose(
+            [
+                AdvancedTransform(
+                    size=size,
+                    p_hflip=p_hflip,
+                    p_distort=p_distort,
+                    scale_distort=scale_distort,
+                    mean=mean,
+                    sigma=sigma,
+                    brightness=brightness,
+                    saturation=saturation,
+                    contrast=contrast,
+                    hue=hue,
+                ),
+                FaceCrop(padding),
             ]
         )
 

@@ -1,1 +1,2 @@
 _target_ : src.dataset.BaseTransform
+size : [256,256]
