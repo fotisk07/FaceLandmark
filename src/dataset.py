@@ -194,3 +194,37 @@ class FaceDataset(torch.utils.data.Dataset):
             image, bbox = self.transform(image, bbox)
 
         return {"image": image, "bbox": bbox}
+
+
+class FaceDatasetDistribution(FaceDataset):
+    def __init__(
+        self,
+        xml_file,
+        root_dir,
+        kernel_size: tuple = (3, 3),
+        sigma: float = 0.3,
+        transform=BaseTransform(),
+    ):
+        super().__init__(xml_file, root_dir, transform)
+        self.kernel_size = kernel_size
+        self.sigma = sigma
+
+    def __getitem__(self, idx):
+        output = super().__getitem__(idx)
+        H, W = output["image"].shape[-2], output["image"].shape[-1]
+        bbox = output["bbox"]  # shape (6,4)
+
+        # Create masks efficiently
+        masks = torch.zeros((5, 1, H, W))
+        x, y = bbox[1:, 0].long(), bbox[1:, 1].long()
+        masks[torch.arange(5), 0, x, y] = 1
+
+        masks = v2.functional.gaussian_blur(
+            masks, kernel_size=self.kernel_size, sigma=self.sigma
+        )
+        # apply softmaxes
+        masks = masks.view(5, -1)  # Flatten spatial dimensions
+        masks = F.softmax(masks, dim=-1)  # Apply softmax independently
+        masks = masks.view(5, 1, H, W)  # Reshape back to (5,1,H,W)
+
+        return {"image": output["image"], "bbox": bbox, "masks": masks}
