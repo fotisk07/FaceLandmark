@@ -132,3 +132,28 @@ class Convolution(Model):
             loss = self.loss(keypoints, targets[:, 1:, :2])
 
         return keypoints, loss
+
+
+class DistribBaseline(Model):
+    def __init__(self, input_size):
+        super().__init__()
+        self.fn1 = nn.Linear(input_size, input_size * 5)
+
+        self.loss = torch.nn.BCEWithLogitsLoss()
+
+    def forward(self, input: dict | tensor) -> tuple[tensor, tensor]:
+        if isinstance(input, dict):
+            images, targets = input["image"], input["masks"]
+        else:
+            images, targets = input, None
+
+        B, N, H, W = targets.shape
+
+        images = images.flatten(1)
+        output = self.fn1(images).view(B, N, H, W)
+
+        loss = None
+        if targets is not None:
+            loss = self.loss(output, targets)
+
+        return output, loss

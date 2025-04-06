@@ -159,7 +159,7 @@ class FaceDatasetDistribution(FaceDataset):
         root_dir,
         kernel_size: tuple = (3, 3),
         sigma: float = 0.3,
-        transform=BaseTransform(),
+        transform=baseTransform(),
     ):
         super().__init__(xml_file, root_dir, transform)
         self.kernel_size = kernel_size

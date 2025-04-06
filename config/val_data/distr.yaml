@@ -1,0 +1,3 @@
+_target_ : src.dataset.FaceDatasetDistribution
+xml_file : data/dlib_faces_5points/test_cleaned.xml
+root_dir : data
