@@ -1,0 +1,2 @@
+_target_ : src.models.ScaledBaseline
+input_size : 196608 # 3 * 256 * 256

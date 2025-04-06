@@ -61,13 +61,30 @@ def save(model: Model, epoch: int):
     )
 
 
+@torch.no_grad()
+def sample_model(model, loader, num_visuals, cols, epoch=0):
+    idxs = np.random.choice(len(loader.dataset), num_visuals)
+    samples = [loader.dataset[i] for i in idxs]
+    pred_keypoints = model.generate(
+        torch.stack([sample["image"] for sample in samples]).to(device)
+    )
+    fig, ax = visualize_grid(samples, pred_keypoints, cols=cols)
+    path = (
+        Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
+        / "sampling"
+        / f"grid_{epoch}.png"
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(path)
+
+
 @hydra.main(version_base=None, config_path="config", config_name="config")
 def main(cfg: DictConfig):
     g = torch.Generator().manual_seed(cfg.seed)
     torch.manual_seed(cfg.seed)
     np.random.seed(cfg.seed)
 
-    transform = hydra.utils.instantiate(cfg.transf)
+    transform = hydra.utils.call(cfg.transf)
     train_dataset = hydra.utils.instantiate(cfg.train_data, transform=transform)
     val_dataset = hydra.utils.instantiate(cfg.val_data)
 
@@ -112,19 +129,10 @@ def main(cfg: DictConfig):
 
         print(f"--------- Finished Epoch {epoch+1} ---------------")
         print(f"Train Loss: {train_loss:.3f} | Val Loss: {eval_loss:.3f}")
+        if cfg.sample:
+            sample_model(model, val_loader, cfg.num_visuals, cfg.cols, epoch)
+            print("Samples saved ! ")
         print("----------------------------------------")
-
-    if cfg.sample:
-        idxs = np.random.choice(len(val_loader.dataset), cfg.num_visuals)
-        samples = [val_loader.dataset[i] for i in idxs]
-        pred_keypoints = model.generate(
-            torch.stack([sample["image"] for sample in samples]).to(device)
-        )
-        fig, ax = visualize_grid(samples, pred_keypoints, cols=cfg.cols)
-        plt.savefig(
-            Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir)
-            / "test.png"
-        )
 
 
 if __name__ == "__main__":

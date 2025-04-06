@@ -1,0 +1,10 @@
+_target_ : src.dataset.advancedTransform
+size : [256,256]
+args:
+  p_hflip: 0.8
+  p_distort : 0.7
+  scale_distort: 0.5
+  brightness : 0.4
+  saturation: 0.2 
+  contrast: 0.4
+  hue: 0.2

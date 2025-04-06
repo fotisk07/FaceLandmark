@@ -11,51 +11,8 @@ tensor = torch.Tensor
 array = np.ndarray
 
 
-class BaseTransform:
-    def __init__(self, size: tuple = (256, 256)):
-        self.transform = v2.Compose(
-            [
-                v2.Resize(size),
-                v2.ToImage(),
-                v2.ToDtype(torch.float, scale=True),
-            ]
-        )
-
-    def __call__(self, img, bbox):
-        return self.transform(img, bbox)
-
-
-class AdvancedTransform(BaseTransform):
-    def __init__(
-        self,
-        size,
-        p_hflip=0.5,
-        p_distort=0.5,
-        scale_distort=0.7,
-        mean=0,
-        sigma=0.1,
-        brightness=0,
-        saturation=0,
-        contrast=0,
-        hue=0,
-    ):
-        self.transform = v2.Compose(
-            [
-                BaseTransform(size),
-                v2.RandomHorizontalFlip(p_hflip),
-                v2.ColorJitter(
-                    brightness=brightness,
-                    saturation=saturation,
-                    contrast=contrast,
-                    hue=hue,
-                ),
-                v2.GaussianNoise(mean=mean, sigma=sigma),
-                v2.RandomPerspective(distortion_scale=scale_distort, p=p_distort),
-            ]
-        )
-
-
-class FaceCrop(BaseTransform):
+# ------------------ My transforms -------------------------
+class FaceCrop(torch.nn.Module):
     def __init__(self, padding: float = 0):
         super().__init__()
         self.padding = padding
@@ -93,42 +50,41 @@ class FaceCrop(BaseTransform):
         return img, bbox
 
 
-class AdvancedFace(BaseTransform):
-    def __init__(
-        self,
-        size=(256, 256),
-        p_hflip=0.5,
-        p_distort=0.5,
-        scale_distort=0.7,
-        mean=0,
-        sigma=0.1,
-        brightness=0,
-        saturation=0,
-        contrast=0,
-        hue=0,
-        padding=0,
-    ):
-        self.transform = v2.Compose(
-            [
-                AdvancedTransform(
-                    size=size,
-                    p_hflip=p_hflip,
-                    p_distort=p_distort,
-                    scale_distort=scale_distort,
-                    mean=mean,
-                    sigma=sigma,
-                    brightness=brightness,
-                    saturation=saturation,
-                    contrast=contrast,
-                    hue=hue,
-                ),
-                FaceCrop(padding),
-            ]
-        )
+# ----------------------Composed pretransforms -----------------------------
+def baseTransform(size=(256, 256)):
+    return v2.Compose(
+        [
+            v2.Resize(size),
+            v2.ToImage(),
+            v2.ToDtype(torch.float, scale=True),
+        ]
+    )
 
 
+def advancedTransform(size, **kwargs):
+    return v2.Compose(
+        [
+            v2.Resize(size),
+            v2.ToImage(),
+            v2.ToDtype(torch.float, scale=True),
+            v2.RandomHorizontalFlip(kwargs.get("p_hflip", 0.5)),
+            v2.ColorJitter(
+                brightness=kwargs.get("brightness", 0.2),
+                saturation=kwargs.get("saturation", 0.1),
+                contrast=kwargs.get("contrast", 0.2),
+                hue=kwargs.get("hue", 0.1),
+            ),
+            v2.RandomPerspective(
+                distortion_scale=kwargs.get("scale_distort", 0.3),
+                p=kwargs.get("p_distort", 0.5),
+            ),
+        ]
+    )
+
+
+# ----------------------Datasets -----------------------------
 class FaceDataset(torch.utils.data.Dataset):
-    def __init__(self, xml_file, root_dir, transform=BaseTransform()):
+    def __init__(self, xml_file, root_dir, transform=baseTransform()):
         self.root_dir = root_dir
         self.transform = transform
         self.data = self.parse_xml(xml_file)
