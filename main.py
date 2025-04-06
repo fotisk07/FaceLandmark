@@ -25,9 +25,7 @@ def eval_model(model: torch.nn.Module, dataloaders: tuple, eval_iters: int) -> d
         for _ in range(eval_iters):
             try:
                 sample = next(loader)
-                # Assuming keys "image", "bbox" and global 'device'
-                image, targets = sample["image"].to(device), sample["bbox"].to(device)
-                output, loss = model(image, targets)
+                output, loss = model({k: v.to(device) for k, v in sample.items()})
                 total_loss_split += loss.item()
                 batches_processed += 1
             except StopIteration:
@@ -110,7 +108,7 @@ def main(cfg: DictConfig):
         total_steps = len(train_loader)
         for step, sample in enumerate(train_loader):
             optimizer.zero_grad()
-            output, loss = model(sample["image"].to(device), sample["bbox"].to(device))
+            output, loss = model({k: v.to(device) for k, v in sample.items()})
             loss.backward()
             optimizer.step()
             if step % 100 == 0:

@@ -13,7 +13,7 @@ class Model(nn.Module, ABC):
         super().__init__()
 
     @abstractmethod
-    def forward(self, images, targets=None):
+    def forward(self, input: dict):
         pass
 
     def generate(self, input: tensor | dict) -> array:
@@ -38,7 +38,12 @@ class Baseline(Model):
 
         self.loss = nn.MSELoss()
 
-    def forward(self, images, targets=None) -> tuple[tensor, tensor]:
+    def forward(self, input: dict | tensor) -> tuple[tensor, tensor]:
+        if isinstance(input, dict):
+            images, targets = input["image"], input["bbox"]
+        else:
+            images, targets = input, None
+
         images = images.flatten(1)
         output = self.fn1(images)  # (B, 14)
 
@@ -63,7 +68,12 @@ class ScaledBaseline(Model):
         )
         self.loss = nn.MSELoss()
 
-    def forward(self, images, targets=None):
+    def forward(self, input: dict | tensor):
+        if isinstance(input, dict):
+            images, targets = input["image"], input["bbox"]
+        else:
+            images, targets = input, None
+
         images = images.flatten(1)
         output = self.layers(images)  # (B, 14)
 
@@ -109,7 +119,12 @@ class Convolution(Model):
         )
         self.loss = nn.MSELoss()
 
-    def forward(self, images, targets=None):
+    def forward(self, input: dict | tensor):
+        if isinstance(input, dict):
+            images, targets = input["image"], input["bbox"]
+        else:
+            images, targets = input, None
+
         keypoints = self.layers(images).view(-1, 5, 2)  # Reshape to (B, 5, 2)
 
         loss = None
